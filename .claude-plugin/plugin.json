@@ -1,0 +1,7 @@
+{
+  "name": "vince-claude-config",
+  "description": "Personal Claude Code configuration: agents, commands, skills, and hooks for Flutter/Dart, Go, and Python development",
+  "author": {
+    "name": "cenzoroni"
+  }
+}

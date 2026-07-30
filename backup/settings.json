@@ -1,0 +1,78 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git show*)",
+      "Bash(git remote -v)",
+      "Bash(git rev-parse*)",
+      "Bash(git stash list*)",
+      "Bash(go build*)",
+      "Bash(go test*)",
+      "Bash(go vet*)",
+      "Bash(flutter analyze*)",
+      "Bash(flutter test*)",
+      "Bash(dart format*)",
+      "Bash(dart analyze*)",
+      "Bash(gofmt*)",
+      "Bash(pipenv run pytest*)",
+      "Bash(pipenv run python -m pytest*)",
+      "Bash(pipenv run python -m py_compile*)",
+      "Bash(python -m pytest*)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(which *)",
+      "Bash(wc *)",
+      "Bash(sort *)",
+      "Bash(jq *)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/scripts/claude-precommit-gate.sh",
+            "if": "Bash(git commit *)",
+            "timeout": 120,
+            "statusMessage": "Running pre-commit quality gate..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/scripts/claude-autoformat.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "nohup python3 ~/scripts/llm-cost-tracker.py > /tmp/llm-cost-tracker.log 2>&1 &"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  }
+}
