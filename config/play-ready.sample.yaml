@@ -4,9 +4,6 @@
 # your copy) and replace the dummy values. Never commit your real copy;
 # play-ready.yaml is in .gitignore.
 
-# Where the templates, scripts and per-app configs live.
-templates_dir: ~/templates/play-store
-
 # Developer identities shown in privacy policies, data-deletion pages and the
 # store listing. An app picks one with `developer_profile:` in its app config;
 # apps without it use `default`. Any developer_* field set in an app config
@@ -20,6 +17,15 @@ developer_profiles:
   studio:
     name: "Jane Developer"
     email: "studio@example.com"
+
+# Where each app's privacy policy and data-deletion page are published.
+# `render.py --hosted` writes them to <repo>/<dir>/<app>/privacy.html and
+# delete-data.html, and the Play Console guides use <base_url>/<app>/privacy
+# and <base_url>/<app>/delete-data. Leave this out to host the pages yourself.
+policy_hosting:
+  repo: ~/repos/my-site
+  dir: public/apps
+  base_url: https://example.com/apps
 
 # Distinguished name for generated upload keystores (keytool -dname).
 keystore:

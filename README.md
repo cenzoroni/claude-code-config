@@ -68,10 +68,18 @@ cd ~/repos/claude-code-config
 # Copy changed files back, commit, push
 ```
 
-## Personal config for /play-ready
+## /play-ready
 
-`/play-ready` keeps personal details (developer names and emails, keystore
-identity, templates location) out of this repo. They live in
-`~/.claude/play-ready.yaml`, which `restore.sh` creates from
-[`config/play-ready.sample.yaml`](config/play-ready.sample.yaml). Fill it in
-locally. `play-ready.yaml` is gitignored so a real copy can't be committed.
+Prepares a Flutter app for Google Play: readiness checklist, signing and
+build setup, privacy and data-deletion pages, and filled-in answers for the
+Play Console forms.
+
+- `play-ready/` holds the templates, scripts and ProGuard base rules. Install
+  the script dependencies once: `cd play-ready/scripts && pipenv install`.
+- Each app keeps its settings in `play-store.yaml` at the root of its own repo
+  (`analyze.py` drafts it).
+- Personal details (developer names and emails, where policy pages are
+  hosted, keystore identity) live in `~/.claude/play-ready.yaml`, which
+  `restore.sh` creates from
+  [`config/play-ready.sample.yaml`](config/play-ready.sample.yaml). Fill it in
+  locally. `play-ready.yaml` is gitignored so a real copy can't be committed.

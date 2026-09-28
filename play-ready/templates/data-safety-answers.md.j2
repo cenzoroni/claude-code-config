@@ -1,0 +1,75 @@
+# Data Safety Form Answers — {{ app.name }}
+
+Complete this at: **Play Console → Policy → App content → Data safety**
+
+---
+
+## Overview
+
+| Question | Answer |
+|----------|--------|
+| Does your app collect or share any user data? | **Yes** |
+| Is all collected data encrypted in transit? | **Yes** (Firebase uses HTTPS/TLS) |
+| Do you provide a way for users to request that their data is deleted? | **Yes** ({% if hosting is defined %}{{ hosting.delete_data_url }}, or {% endif %}via email to {{ app.developer_email }}) |
+
+---
+
+## Data Types Collected
+
+{% for item in data_collected %}
+### {{ item.type | replace('_', ' ') | title }}
+{% if item.label is defined %}
+> {{ item.label }}
+{% endif %}
+
+| Question | Answer |
+|----------|--------|
+| Is this data collected, shared, or both? | **{{ 'Both' if item.shared_with_third_parties | default(false) else 'Collected' }}** |
+| Is this data processed ephemerally? | **{{ 'Yes' if item.ephemeral | default(false) else 'No' }}** |
+| Is this data required or can users choose whether it's collected? | **{{ 'Required' if item.required | default(true) else 'Optional' }}** |
+| Why is this data collected? | **{{ item.purpose | replace('_', ' ') | title }}** |
+{% if item.shared_with_third_parties | default(false) %}
+| Who is this data shared with? | **{{ item.shared_with | default('Third-party services listed in the privacy policy') }}** |
+| Why is this data shared? | **{{ item.sharing_purpose | default(item.purpose) | replace('_', ' ') | title }}** |
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Data Types NOT Collected
+
+Based on your app configuration, the following data types should be marked as **not collected**:
+
+{% set collected_types = data_collected | map(attribute='type') | list %}
+{% set all_types = [
+  'name', 'email_address', 'user_ids', 'address', 'phone_number',
+  'race_and_ethnicity', 'political_or_religious_beliefs', 'sexual_orientation',
+  'other_personal_info', 'purchase_history', 'credit_info', 'other_financial_info',
+  'health_info', 'fitness_info', 'emails', 'sms_or_mms', 'other_messages',
+  'photos', 'videos', 'voice_or_sound_recordings', 'music_files', 'other_audio_files',
+  'files_and_docs', 'calendar_events', 'contacts',
+  'app_interactions', 'search_history', 'installed_apps', 'other_user_generated_content', 'other_actions',
+  'web_browsing_history',
+  'crash_logs', 'diagnostics', 'other_app_performance_data',
+  'device_or_other_ids',
+  'approximate_location', 'precise_location'
+] %}
+{% for t in all_types %}
+{% if t not in collected_types %}
+- {{ t | replace('_', ' ') | title }}
+{% endif %}
+{% endfor %}
+
+---
+
+## Tips
+
+- Google groups data types into categories (Personal info, Financial info, etc.). Select only the categories that contain types listed above in "Data Types Collected."
+- For Firebase Auth with email sign-in: select **Personal info → Email address**.
+- For Firebase Auth with Google Sign-In: select **Personal info → Email address** and **Personal info → Name** (Google provides display name).
+- If you use Firebase Analytics: select **App info and performance → Diagnostics** and **Device or other IDs**.
+- If you use Firebase Crashlytics: select **App info and performance → Crash logs**.
+{% if has_location | default(false) %}
+- Location permissions detected: select **Location → {{ 'Precise location' if 'ACCESS_FINE_LOCATION' in permissions | default([]) else 'Approximate location' }}**.
+{% endif %}

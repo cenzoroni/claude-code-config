@@ -4,3 +4,4 @@
 
 # Personal /play-ready config (use config/play-ready.sample.yaml as the template)
 play-ready.yaml
+play-ready/scripts/Pipfile.lock

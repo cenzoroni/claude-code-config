@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete Your Data – {{ app.name }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: {{ app.brand_color | default('#1565c0') }};
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .logo-name { font-size: 22px; font-weight: 700; color: {{ app.brand_color | default('#1565c0') }}; }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    p { font-size: 15px; line-height: 1.6; color: #444; margin-bottom: 16px; }
+    .section {
+      background: #f5f7fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    ol, ul { padding-left: 20px; }
+    ol li, ul li { font-size: 14px; line-height: 1.7; color: #555; }
+    .divider { border: none; border-top: 1px solid #eee; margin: 24px 0; }
+    .contact { font-size: 14px; color: #666; }
+    .contact a { color: {{ app.brand_color | default('#1565c0') }}; text-decoration: none; }
+    .contact a:hover { text-decoration: underline; }
+    .tag {
+      display: inline-block;
+      background: #e3f2fd;
+      color: {{ app.brand_color | default('#1565c0') }};
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .data-list { margin-top: 8px; padding-left: 20px; }
+    .data-list li { font-size: 14px; line-height: 1.7; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">{{ app.logo_emoji | default('📱') }}</div>
+      <span class="logo-name">{{ app.name }}</span>
+    </div>
+
+    <h1>Delete Your Data</h1>
+    <p>You can request deletion of your {{ app.name }} data. {% if app.has_in_app_deletion | default(false) %}You can also delete specific data directly in the app.{% endif %}</p>
+
+{% if app.has_in_app_deletion | default(false) %}
+    <div class="section">
+      <h2>Delete data in the app <span class="tag">Instant</span></h2>
+      <ol>
+        <li>Open the {{ app.name }} app and tap <strong>Settings</strong></li>
+{% if app.in_app_deletion_steps is defined %}
+{% for step in app.in_app_deletion_steps %}
+        <li>{{ step }}</li>
+{% endfor %}
+{% else %}
+        <li>Navigate to the data management section</li>
+        <li>Choose which data to delete and confirm</li>
+{% endif %}
+      </ol>
+    </div>
+{% endif %}
+
+    <div class="section">
+      <h2>Delete your entire account</h2>
+{% if app.has_in_app_account_deletion | default(false) %}
+      <ol>
+        <li>Open the {{ app.name }} app</li>
+        <li>Go to <strong>Settings</strong></li>
+        <li>Tap <strong>Account</strong></li>
+        <li>Tap <strong>Delete Account</strong> and confirm</li>
+      </ol>
+      <p style="margin-top:12px; margin-bottom:0; font-size:13px; color:#666;">
+        Deleting your account permanently removes all associated data including:
+      </p>
+{% else %}
+      <p style="margin-bottom:8px; font-size:14px; color:#555;">
+        To delete your account, email us at the address below. The following data will be permanently removed:
+      </p>
+{% endif %}
+      <ul class="data-list">
+        <li>Account profile and login credentials</li>
+{% for item in data_collected %}
+        <li>{{ item.label | default(item.type | replace('_', ' ') | title) }}</li>
+{% endfor %}
+      </ul>
+    </div>
+
+    <hr class="divider">
+
+    <p class="contact">
+{% if app.has_in_app_account_deletion | default(false) %}
+      Can't access the app? Email
+{% else %}
+      To request deletion, email
+{% endif %}
+      <a href="mailto:{{ app.developer_email }}?subject={{ app.name | urlencode }}%20Data%20Deletion%20Request">{{ app.developer_email }}</a>
+      with the subject <em>"{{ app.name }} Data Deletion Request"</em> and include your registered email address. We'll process your request within 30 days.
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ app.name }} – Privacy Policy</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
+  h1 { font-size: 1.5em; }
+  h2 { font-size: 1.15em; margin-top: 1.5em; }
+  p, li { font-size: 0.95em; }
+  a { color: #1565c0; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+  th { font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p><strong>{{ app.name }}</strong><br>Last updated: {{ current_date }}</p>
+
+<h2>What We Collect</h2>
+<p>{{ app.name }} collects only what is needed to make the app work:</p>
+<ul>
+{% if firebase.auth_methods is defined and firebase.auth_methods | length > 0 %}
+  <li><strong>Account information</strong> – email address and authentication credentials via Firebase Authentication. You may sign in with {{ firebase.auth_methods | map('replace', '_', ' ') | map('title') | join(' or ') }}.</li>
+{% endif %}
+{% for item in data_collected %}
+  <li><strong>{{ item.label | default(item.type | replace('_', ' ') | title) }}</strong> – collected for {{ item.purpose | replace('_', ' ') }}.</li>
+{% endfor %}
+{% if has_location | default(false) %}
+  <li><strong>Location data</strong> – GPS coordinates are used while the app is in use to provide location-relevant features. We do not track location in the background.</li>
+{% endif %}
+{% if has_camera | default(false) or has_photos | default(false) %}
+  <li><strong>Photos</strong> – images you capture or select are stored in Firebase Storage and linked to your account.</li>
+{% endif %}
+</ul>
+
+{% if privacy_policy_extras is defined %}
+{% for extra in privacy_policy_extras %}
+<h2>{{ extra.title }}</h2>
+{{ extra.body }}
+{% endfor %}
+{% endif %}
+
+<h2>How We Use Your Data</h2>
+<ul>
+{% if 'auth' in firebase.services %}
+  <li>To authenticate you and provide a personalized experience.</li>
+{% endif %}
+{% if 'firestore' in firebase.services %}
+  <li>To store and sync your app data across devices.</li>
+{% endif %}
+{% if has_location | default(false) %}
+  <li>To show information relevant to your current location.</li>
+{% endif %}
+{% for item in data_collected %}
+  <li>To provide {{ item.purpose | replace('_', ' ') }} using your {{ item.label | default(item.type | replace('_', ' ')) | lower }}.</li>
+{% endfor %}
+</ul>
+<p>We do not sell, rent, or share your personal data with third parties. We do not serve ads.{% if not app.contains_ads | default(false) %} We do not use your data for profiling or marketing.{% endif %}</p>
+
+<h2>Third-Party Services</h2>
+<p>The app uses the following services, governed by their respective privacy policies:</p>
+<table>
+  <tr><th>Service</th><th>Purpose</th><th>Privacy Policy</th></tr>
+{% if 'auth' in firebase.services %}
+  <tr><td>Firebase Authentication</td><td>Sign-in</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if 'firestore' in firebase.services %}
+  <tr><td>Cloud Firestore</td><td>Data storage</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if 'storage' in firebase.services %}
+  <tr><td>Firebase Storage</td><td>File storage</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if 'analytics' in firebase.services %}
+  <tr><td>Firebase Analytics</td><td>Usage analytics</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if 'crashlytics' in firebase.services %}
+  <tr><td>Firebase Crashlytics</td><td>Crash reporting</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if 'messaging' in firebase.services %}
+  <tr><td>Firebase Cloud Messaging</td><td>Push notifications</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if 'functions' in firebase.services %}
+  <tr><td>Firebase Cloud Functions</td><td>Server-side processing</td><td><a href="https://firebase.google.com/support/privacy">Firebase Privacy</a></td></tr>
+{% endif %}
+{% if third_party_services is defined %}
+{% for svc in third_party_services %}
+  <tr><td>{{ svc.name }}</td><td>{{ svc.purpose }}</td><td><a href="{{ svc.privacy_url }}">{{ svc.name }} Privacy</a></td></tr>
+{% endfor %}
+{% endif %}
+</table>
+
+<h2>Data Retention and Deletion</h2>
+<p>Your data is kept as long as your account exists. You may request deletion of your account and all associated data at any time by emailing <a href="mailto:{{ app.developer_email }}">{{ app.developer_email }}</a>. Upon request, we will delete your authentication record and all stored documents associated with your user ID within 30 days.</p>
+{% if data_collected | length > 0 %}
+<p><strong>Data deleted includes:</strong></p>
+<ul>
+  <li>Account profile and login credentials</li>
+{% for item in data_collected %}
+  <li>{{ item.label | default(item.type | replace('_', ' ') | title) }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h2>Security</h2>
+<p>Data is transmitted over HTTPS and stored in Google Cloud infrastructure.{% if 'firestore' in firebase.services %} Firestore security rules restrict access so that only authorized users can read or modify their own data.{% endif %}</p>
+
+<h2>Children's Privacy</h2>
+<p>This app is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us data, contact us and we will delete it.</p>
+
+<h2>Changes</h2>
+<p>If we update this policy, the revised version will be posted here with a new "Last updated" date.</p>
+
+<h2>Contact</h2>
+<p>Questions? Email <a href="mailto:{{ app.developer_email }}">{{ app.developer_email }}</a>.</p>
+</body>
+</html>

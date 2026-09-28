@@ -8,30 +8,34 @@ Subcommands (passed as $ARGUMENTS):
 
 ## Prerequisites
 
-- Current directory must contain a `pubspec.yaml` (Flutter project)
+- Current directory must contain a `pubspec.yaml` (Flutter project).
+- **`<play_ready_dir>`** is the `play-ready/` folder of the claude-code-config
+  plugin: `${CLAUDE_PLUGIN_ROOT}/play-ready` when installed as a plugin,
+  otherwise `~/repos/claude-code-config/play-ready`. It holds `templates/`,
+  `scripts/` and `proguard/`.
+- **App config:** `<project-root>/play-store.yaml`, committed in the app's own
+  repo. It holds the app's details (name, ID, data collected, content rating,
+  signing alias, store assets).
 - **User config** at `~/.claude/play-ready.yaml` (or the path in
-  `PLAY_READY_CONFIG`). It holds the personal details: `templates_dir`,
-  `developer_profiles` and `keystore`. Read it first. If it's missing, copy
-  `config/play-ready.sample.yaml` from the claude-code-config plugin there and
-  ask the user to fill it in. Never write its values into a public repo.
-- In the steps below, `<templates_dir>` means the user config's `templates_dir`.
-- Templates and scripts live in `<templates_dir>/`
-- Per-app configs in `<templates_dir>/config/<app-name>.yaml`. Developer name,
-  email, website and phone come from the user config's profile (`default`,
-  or the one named by `app.developer_profile`); an app config only sets them
-  to override the profile.
-- Python dependencies: `cd <templates_dir>/scripts && pipenv install`
+  `PLAY_READY_CONFIG`). It holds the personal details: `developer_profiles`,
+  `policy_hosting` and `keystore`. Read it first. If it's missing, copy
+  `config/play-ready.sample.yaml` from the plugin there and ask the user to
+  fill it in. Never write its values into a public repo.
+  - Developer name, email, website and phone come from a profile: `default`,
+    or the one named by `app.developer_profile`. An app config sets them only
+    to override the profile.
+- Python dependencies: `cd <play_ready_dir>/scripts && pipenv install`
 
 ---
 
 ## Phase 1 — Analyze
 
 1. Detect the Flutter project. Read `pubspec.yaml` to get the app name.
-2. Check if a config YAML exists at `<templates_dir>/config/<app-name>.yaml`.
+2. Check if `<project-root>/play-store.yaml` exists.
    - If yes: load it and use it as the source of truth.
    - If no: run the analyzer to generate a draft:
      ```
-     cd <templates_dir>/scripts && pipenv run python analyze.py <project-path>
+     cd <play_ready_dir>/scripts && pipenv run python analyze.py <project-path>
      ```
      Show the user the generated config and ask them to review before continuing.
 3. Print a readiness checklist by checking these items in the project:
@@ -93,7 +97,7 @@ If the release buildType uses debug signing, patch it:
 
 ### 2.4 ProGuard Rules
 If `android/app/proguard-rules.pro` is missing:
-- Copy from `<templates_dir>/proguard/flutter.pro`
+- Copy from `<play_ready_dir>/proguard/flutter.pro`
 - Add app-specific keep rules for the app's namespace
 - In build.gradle.kts release buildType, add:
   ```kotlin
@@ -116,37 +120,42 @@ key.properties
 *.keystore
 ```
 
-### 2.7 Privacy Policy
-If missing, render from template:
+### 2.7 Privacy Policy and Data Deletion Page
+**If the user config has `policy_hosting`** (the normal case), render both
+pages into the hosting site:
 ```bash
-cd <templates_dir>/scripts && pipenv run python render.py \
-  --config <templates_dir>/config/<app-name>.yaml \
+cd <play_ready_dir>/scripts && pipenv run python render.py \
+  --config <project-root>/play-store.yaml --hosted
+```
+This writes `<repo>/<dir>/<app-name>/privacy.html` and `delete-data.html` and
+prints the two public URLs (`<base_url>/<app-name>/privacy` and
+`/delete-data`). Tell the user the pages go live only after they commit and
+deploy that site repo. Ask before committing or deploying it.
+
+**Without `policy_hosting`**, render into the app repo instead:
+```bash
+cd <play_ready_dir>/scripts && pipenv run python render.py \
+  --config <project-root>/play-store.yaml \
   --template privacy-policy.html.j2 \
   --output <project-root>/privacy-policy.html
-```
-
-### 2.8 Data Deletion Page
-If missing, render from template:
-```bash
-cd <templates_dir>/scripts && pipenv run python render.py \
-  --config <templates_dir>/config/<app-name>.yaml \
+cd <play_ready_dir>/scripts && pipenv run python render.py \
+  --config <project-root>/play-store.yaml \
   --template data-deletion.html.j2 \
   --output <project-root>/public/delete-data.html
 ```
-For apps with Firebase Hosting, place in `public/`. Otherwise place at project root.
 
 ### 2.9 Generate Store Assets (Icon, Feature Graphic, Screenshots)
 
 Run the asset generator for icon and feature graphic:
 ```bash
-cd <templates_dir>/scripts && pipenv run python generate_assets.py \
-  --config <templates_dir>/config/<app-name>.yaml \
+cd <play_ready_dir>/scripts && pipenv run python generate_assets.py \
+  --config <project-root>/play-store.yaml \
   --output <project-root>/store_assets \
   icon
 ```
 ```bash
-cd <templates_dir>/scripts && pipenv run python generate_assets.py \
-  --config <templates_dir>/config/<app-name>.yaml \
+cd <play_ready_dir>/scripts && pipenv run python generate_assets.py \
+  --config <project-root>/play-store.yaml \
   --output <project-root>/store_assets \
   feature
 ```
@@ -188,8 +197,8 @@ jarsigner -verify build/app/outputs/bundle/release/app-release.aab
 Render all compliance/guide templates and write to `<app repo>/docs/plans/play-store/`:
 
 ```bash
-cd <templates_dir>/scripts && pipenv run python render.py \
-  --config <templates_dir>/config/<app-name>.yaml \
+cd <play_ready_dir>/scripts && pipenv run python render.py \
+  --config <project-root>/play-store.yaml \
   --all \
   --output <app repo>/docs/plans/play-store/
 ```
@@ -209,8 +218,9 @@ Print a summary listing all generated files with their paths.
 ## `templates` Subcommand
 
 If subcommand is `templates`:
-1. Find all YAML files in `<templates_dir>/config/`
-2. For each config, render all templates to `<app repo>/docs/plans/play-store/`
+1. Find every app config: `ls ~/repos/*/play-store.yaml`
+2. For each one, render all templates to `<that repo>/docs/plans/play-store/`
+   (and the hosted pages with `--hosted` if `policy_hosting` is set)
 3. Print summary of all rendered files
 
 ---

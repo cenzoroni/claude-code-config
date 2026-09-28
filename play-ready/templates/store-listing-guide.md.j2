@@ -1,0 +1,149 @@
+# Store Listing Guide — {{ app.name }}
+
+Complete this at: **Play Console → Grow → Store presence → Main store listing**
+
+---
+
+## App Details
+
+### Short Description (max 80 characters)
+
+```
+{{ app.description_short | default('TODO: Write a short description (max 80 chars)') }}
+```
+
+{% if app.description_short is defined %}
+Character count: **{{ app.description_short | length }}** / 80
+{% if app.description_short | length > 80 %}
+⚠️ **TOO LONG** — trim to 80 characters or fewer.
+{% else %}
+✅ Within limit.
+{% endif %}
+{% endif %}
+
+### Full Description (max 4000 characters)
+
+```
+{{ app.description_long | default('TODO: Write a full description (max 4000 chars)') }}
+```
+
+{% if app.description_long is defined %}
+Character count: **{{ app.description_long | length }}** / 4000
+{% if app.description_long | length > 4000 %}
+⚠️ **TOO LONG** — trim to 4000 characters or fewer.
+{% else %}
+✅ Within limit.
+{% endif %}
+{% endif %}
+
+### Category
+
+**{{ app.category | default('TODO: Choose a category') }}**
+
+Play Store categories: Art & Design, Auto & Vehicles, Beauty, Books & Reference, Business, Comics, Communication, Dating, Education, Entertainment, Events, Finance, Food & Drink, Health & Fitness, House & Home, Libraries & Demo, Lifestyle, Maps & Navigation, Medical, Music & Audio, News & Magazines, Parenting, Personalization, Photography, Productivity, Shopping, Social, Sports, Tools, Travel & Local, Video Players & Editors, Weather.
+
+---
+
+## Graphics Assets
+
+### Hi-Res Icon (required)
+
+| Spec | Requirement |
+|------|-------------|
+| Size | **512 × 512 px** |
+| Format | PNG (32-bit, with alpha) |
+| Max file size | 1024 KB |
+
+{% if store_assets.icon_source is defined %}
+Source icon: `{{ store_assets.icon_source }}`
+{% if icon_dimensions is defined %}
+Current dimensions: {{ icon_dimensions.width }} × {{ icon_dimensions.height }}
+{% if icon_dimensions.width >= 512 and icon_dimensions.height >= 512 %}
+✅ Source is large enough — resize to 512×512 for upload.
+{% else %}
+⚠️ Source icon is too small. You need at least 512×512.
+{% endif %}
+{% endif %}
+{% else %}
+⚠️ No source icon configured. Add `store_assets.icon_source` to your config.
+{% endif %}
+
+### Feature Graphic (required)
+
+| Spec | Requirement |
+|------|-------------|
+| Size | **1024 × 500 px** |
+| Format | PNG or JPEG |
+
+This is the banner image shown at the top of your store listing. Tips:
+- Use your app name and a visual that conveys the core experience
+- Keep text minimal — it will be shown at various sizes
+- Tools: Figma, Canva, or any image editor
+- Do NOT include device frames in the feature graphic
+
+{% if store_assets.feature_graphic is defined %}
+✅ Feature graphic configured: `{{ store_assets.feature_graphic }}`
+{% else %}
+⚠️ No feature graphic yet. Create a 1024×500 image and add `store_assets.feature_graphic` to your config.
+{% endif %}
+
+### Screenshots (required)
+
+| Spec | Requirement |
+|------|-------------|
+| Minimum | **2 phone screenshots** |
+| Recommended | 4–8 screenshots |
+| Phone size | 16:9 aspect ratio (e.g., 1080×1920) |
+| Tablet size | Recommended if targeting tablets |
+| Format | PNG or JPEG, no alpha |
+| Max per type | 8 screenshots |
+
+#### Recommended Screens to Capture
+
+{% if screens is defined and screens | length > 0 %}
+{% for screen in screens %}
+{{ loop.index }}. **{{ screen }}**
+{% endfor %}
+{% else %}
+Review your app's screens and capture the most important user flows.
+{% endif %}
+
+Tips:
+- Show the app in action, not empty states
+- Consider adding device frames and captions using tools like [screenshots.pro](https://screenshots.pro) or Figma
+- Capture in both light and dark mode if your app supports it
+- Use a clean device with no notification bar clutter
+
+{% if store_assets.screenshots is defined and store_assets.screenshots | length > 0 %}
+✅ Screenshots configured: {{ store_assets.screenshots | length }} files
+{% else %}
+⚠️ No screenshots configured yet. Capture them and add paths to `store_assets.screenshots` in your config.
+{% endif %}
+
+---
+
+## Contact Details
+
+| Field | Value |
+|-------|-------|
+| Developer name | {{ app.developer_name | default('TODO') }} |
+| Email | {{ app.developer_email | default('TODO') }} |
+| Phone | {{ app.developer_phone | default('Optional — can be left blank') }} |
+| Website | {{ app.developer_website | default('Optional — can be left blank') }} |
+{% if hosting is defined %}| Privacy policy URL | {{ hosting.privacy_url }} |
+| Account/data deletion URL | {{ hosting.delete_data_url }} |
+{% else %}| Privacy policy URL | Required — host your rendered `privacy-policy.html` and enter the URL |
+{% endif %}
+
+---
+
+## Checklist
+
+- [ ] Short description written (≤80 chars)
+- [ ] Full description written (≤4000 chars)
+- [ ] Category selected
+- [ ] Hi-res icon uploaded (512×512)
+- [ ] Feature graphic uploaded (1024×500)
+- [ ] At least 2 phone screenshots uploaded
+- [ ] Contact email entered
+- [ ] Privacy policy URL entered

@@ -1,0 +1,111 @@
+# Content Rating Questionnaire (IARC) — {{ app.name }}
+
+Complete this at: **Play Console → Policy → App content → Content rating**
+
+Select **"Start new questionnaire"**, then choose the category that best fits your app. Answer each question as indicated below.
+
+---
+
+## Section 1: Violence
+
+| # | Question | Answer |
+|---|----------|--------|
+| 1 | Does the app depict violence or contain violent themes? | **{{ 'Yes' if content_rating.violence | default('none') != 'none' else 'No' }}** |
+{% if content_rating.violence | default('none') != 'none' %}
+| 2 | Is the violence realistic? (blood, injury detail) | **{{ 'Yes' if content_rating.violence in ['realistic', 'graphic'] else 'No' }}** |
+| 3 | Is violence directed at specific characters? | **{{ 'Yes' if content_rating.violence in ['directed', 'realistic', 'graphic'] else 'No' }}** |
+| 4 | Can players engage in violence against other human characters? | **{{ 'Yes' if content_rating.violence == 'graphic' else 'No' }}** |
+| 5 | Is the violence rewarded or shown without consequence? | **{{ 'Yes' if content_rating.violence_rewarded | default(false) else 'No' }}** |
+{% else %}
+| 2 | Is the violence realistic? | **N/A** |
+| 3 | Is violence directed at specific characters? | **N/A** |
+| 4 | Can players engage in violence against other human characters? | **N/A** |
+| 5 | Is the violence rewarded or shown without consequence? | **N/A** |
+{% endif %}
+
+## Section 2: Sexuality
+
+| # | Question | Answer |
+|---|----------|--------|
+| 6 | Does the app contain sexual content, nudity, or sexual themes? | **{{ 'Yes' if content_rating.sexual_content | default('none') != 'none' else 'No' }}** |
+{% if content_rating.sexual_content | default('none') != 'none' %}
+| 7 | Is the sexual content graphic or explicit? | **{{ 'Yes' if content_rating.sexual_content == 'explicit' else 'No' }}** |
+{% else %}
+| 7 | Is the sexual content graphic or explicit? | **N/A** |
+{% endif %}
+
+## Section 3: Language
+
+| # | Question | Answer |
+|---|----------|--------|
+| 8 | Does the app contain profanity, crude humor, or sexual references in text/audio? | **{{ 'Yes' if content_rating.profanity | default('none') != 'none' else 'No' }}** |
+{% if content_rating.profanity | default('none') != 'none' %}
+| 9 | How frequent/intense is the language? | **{{ content_rating.profanity | title }}** |
+{% else %}
+| 9 | How frequent/intense is the language? | **N/A** |
+{% endif %}
+
+## Section 4: Controlled Substances
+
+| # | Question | Answer |
+|---|----------|--------|
+| 10 | Does the app reference or depict tobacco, alcohol, or drugs? | **{{ 'Yes' if content_rating.controlled_substances | default('none') != 'none' else 'No' }}** |
+{% if content_rating.controlled_substances | default('none') != 'none' %}
+| 11 | Is the use depicted positively/neutrally or shown with consequences? | **{{ content_rating.substance_portrayal | default('Neutral') | title }}** |
+{% else %}
+| 11 | Is the use depicted positively/neutrally or shown with consequences? | **N/A** |
+{% endif %}
+
+## Section 5: Interactive Elements
+
+| # | Question | Answer |
+|---|----------|--------|
+| 12 | Do users interact with each other in any way? (chat, shared content, multiplayer) | **{{ 'Yes' if content_rating.user_interaction | default(false) else 'No' }}** |
+| 13 | Is user-generated content possible? (text, images, levels) | **{{ 'Yes' if content_rating.allows_user_generated_content | default(false) else 'No' }}** |
+| 14 | Is there real-money gambling or simulated gambling? | **{{ 'Yes' if content_rating.gambling | default(false) else 'No' }}** |
+| 15 | Can users make digital purchases within the app? | **{{ 'Yes' if content_rating.digital_purchases | default(false) else 'No' }}** |
+| 16 | Does the app share personal information with third parties? | **{{ 'Yes' if data_collected | selectattr('shared_with_third_parties', 'true') | list | length > 0 else 'No' }}** |
+| 17 | Does the app share the user's physical location with other users? | **{{ 'Yes' if content_rating.shares_location | default(false) else 'No' }}** |
+| 18 | Does the app allow unrestricted web browsing? | **{{ 'Yes' if content_rating.unrestricted_web | default(false) else 'No' }}** |
+
+## Section 6: Miscellaneous
+
+| # | Question | Answer |
+|---|----------|--------|
+| 19 | Is the app primarily a game? | **{{ 'Yes' if content_rating.is_game | default(false) else 'No' }}** |
+| 20 | Does the app contain loot boxes or randomized paid items? | **{{ 'Yes' if content_rating.loot_boxes | default(false) else 'No' }}** |
+
+---
+
+## Expected Rating
+
+{% set has_content = content_rating.violence | default('none') != 'none' or content_rating.sexual_content | default('none') != 'none' or content_rating.profanity | default('none') != 'none' or content_rating.controlled_substances | default('none') != 'none' %}
+{% if not has_content %}
+| Standard | Rating |
+|----------|--------|
+| ESRB | **E (Everyone)** |
+| PEGI | **3** |
+| USK | **0** |
+| GRAC | **All** |
+| IARC | **Rated for Everyone** |
+{% elif content_rating.violence | default('none') in ['cartoon', 'mild'] %}
+| Standard | Rating |
+|----------|--------|
+| ESRB | **E10+ (Everyone 10+)** |
+| PEGI | **7** |
+| IARC | **Rated 7+** |
+{% elif content_rating.profanity | default('none') == 'mild' %}
+| Standard | Rating |
+|----------|--------|
+| ESRB | **T (Teen)** |
+| PEGI | **12** |
+| IARC | **Rated 12+** |
+{% else %}
+| Standard | Rating |
+|----------|--------|
+| ESRB | **M (Mature)** |
+| PEGI | **16/18** |
+| IARC | **Rated 16+** |
+
+> Review your content carefully — mature ratings may limit your app's visibility.
+{% endif %}

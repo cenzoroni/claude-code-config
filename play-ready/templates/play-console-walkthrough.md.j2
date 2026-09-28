@@ -1,0 +1,224 @@
+# Play Console Walkthrough — {{ app.name }}
+
+A step-by-step guide to publishing **{{ app.name }}** on Google Play.
+
+---
+
+## 1. Create App
+
+Go to [Play Console](https://play.google.com/console) and click **Create app**.
+
+| Field | Value |
+|-------|-------|
+| App name | **{{ app.name }}** |
+| Default language | **English (United States)** |
+| App or Game | **{{ 'Game' if content_rating.is_game | default(false) else 'App' }}** |
+| Free or Paid | **{{ 'Paid' if app.is_paid | default(false) else 'Free' }}** |
+
+Check all declaration boxes (Developer Program Policies, US export laws, etc.) and click **Create app**.
+
+---
+
+## 2. Store Listing
+
+Navigate to: **Grow → Store presence → Main store listing**
+
+Fill in all fields using the **Store Listing Guide** (`store-listing-guide.md`):
+- Short description ({{ app.description_short | default('TODO') | length if app.description_short is defined else '?' }} chars)
+- Full description
+- App icon (512×512)
+- Feature graphic (1024×500)
+- Phone screenshots (min 2)
+- App category: **{{ app.category | default('TODO') }}**
+- Contact details
+
+---
+
+## 3. Content Rating
+
+Navigate to: **Policy → App content → Content rating**
+
+Click **Start new questionnaire** and answer each question using the **Content Rating Answers** guide (`content-rating-answers.md`).
+
+Expected result: **Rated for Everyone** (based on your config).
+
+---
+
+## 4. Target Audience
+
+Navigate to: **Policy → App content → Target audience**
+
+| Field | Value |
+|-------|-------|
+| Target age group | **{{ app.target_audience | default('general') | title }}** |
+{% if app.target_audience | default('general') == 'general' %}
+
+Select **18 and over** (or your applicable age group). If your app is not specifically designed for children, do NOT select any under-13 age group — doing so triggers additional compliance requirements (COPPA / Families Policy).
+{% elif app.target_audience | default('general') == 'children' %}
+
+⚠️ **Children's app** — you must comply with Google's Families Policy:
+- No behavioral advertising
+- Teacher Approved program (optional but recommended)
+- Privacy policy must explicitly address children's data
+{% endif %}
+
+---
+
+## 5. App Access
+
+Navigate to: **Policy → App content → App access**
+
+{% if 'auth' in firebase.services | default([]) %}
+Your app **requires sign-in** (Firebase Auth). You must select **"All or some functionality is restricted"** and provide test credentials.
+
+### Test Account Setup
+
+1. Create a test account for Google reviewers:
+   - Email: `playstore-reviewer@{{ app.developer_email.split('@')[1] | default('yourdomain.com') }}` (or any email you control)
+   - Password: Use a strong, unique password
+2. In Play Console, click **Add new instructions**:
+   - Name: **Test Account**
+   - Username: (the test email)
+   - Password: (the test password)
+   - Any other instructions: e.g., "Tap 'Sign in with email' and enter these credentials"
+{% if app.test_account_notes is defined %}
+3. Additional notes: {{ app.test_account_notes }}
+{% endif %}
+
+⚠️ **The test account must work** — a non-functional test account is the #1 reason for review rejection.
+{% else %}
+Your app does not require sign-in. Select **"All functionality is available without special access"**.
+{% endif %}
+
+---
+
+## 6. Data Safety
+
+Navigate to: **Policy → App content → Data safety**
+
+Complete the form using the **Data Safety Answers** guide (`data-safety-answers.md`).
+
+Key points:
+- You collect user data → **Yes**
+- All data encrypted in transit → **Yes**
+- Users can request deletion → **Yes**
+- Then go through each data type listed in the guide
+
+---
+
+## 7. Ads Declaration
+
+Navigate to: **Policy → App content → Ads**
+
+| Question | Answer |
+|----------|--------|
+| Does your app contain ads? | **{{ 'Yes' if app.contains_ads | default(false) else 'No' }}** |
+
+{% if app.contains_ads | default(false) %}
+Since your app contains ads, ensure your ad SDK is properly integrated and that your ads comply with Google's ad policies.
+{% endif %}
+
+---
+
+## 8. Testing Track (Recommended First Step)
+
+Before submitting to production, use the **internal testing** track:
+
+Navigate to: **Test → Internal testing**
+
+1. Click **Create new release**
+2. Upload your AAB file:
+   ```
+   {{ aab_path | default('build/app/outputs/bundle/release/app-release.aab') }}
+   ```
+3. Add release notes (e.g., "Initial release")
+4. Click **Review release** → **Start rollout to Internal testing**
+
+### Add Testers
+
+1. Go to **Internal testing → Testers**
+2. Create an email list with your own email (and any testers)
+3. Share the opt-in link with testers
+4. Testers can install via the link after opting in
+
+### Why Internal First?
+
+- Validates that your AAB uploads and installs correctly
+- Catches signing/manifest issues before production review
+- No review wait time — available to testers immediately
+- You can promote from internal → production when ready
+
+---
+
+## 9. Upload AAB
+
+When ready for production:
+
+Navigate to: **Production → Create new release**
+
+1. Upload the signed AAB:
+   ```
+   {{ aab_path | default('build/app/outputs/bundle/release/app-release.aab') }}
+   ```
+2. The signing key will be managed by Google Play App Signing (you'll be prompted to opt in on first upload)
+3. Release name: auto-generated from versionName ({{ app.version | default('1.0.0') }})
+4. Release notes: Write a user-facing description of what this version includes
+
+### Build the AAB
+
+```bash
+cd {{ app.repo | default('.') }}
+flutter build appbundle
+```
+
+Verify the output:
+```bash
+ls -la build/app/outputs/bundle/release/app-release.aab
+jarsigner -verify build/app/outputs/bundle/release/app-release.aab
+```
+
+---
+
+## 10. Review & Publish
+
+1. Go to **Publishing overview** in the left sidebar
+2. Review all sections — Play Console will show warnings for any incomplete items
+3. Click **Send for review**
+
+### Timeline
+
+| Scenario | Expected Wait |
+|----------|---------------|
+| New app (first submission) | **1–3 business days** (sometimes up to 7) |
+| Update to existing app | **Usually within 24 hours** |
+| Rejected → resubmission | **1–3 business days** |
+
+### Common Rejection Reasons
+
+1. **Non-functional test account** — make sure it works!
+2. **Missing privacy policy** — must be a reachable URL
+3. **Data safety mismatch** — form must match actual app behavior
+4. **Metadata issues** — misleading description, keyword stuffing
+5. **Broken functionality** — app crashes on reviewer's device
+
+### After Approval
+
+- Your app goes live on Google Play within a few hours
+- Monitor the **Quality → Android vitals** dashboard for crashes
+- Respond to user reviews in **Ratings and reviews**
+
+---
+
+## Checklist Summary
+
+- [ ] App created in Play Console
+- [ ] Store listing complete (descriptions, icon, feature graphic, screenshots)
+- [ ] Content rating questionnaire submitted
+- [ ] Target audience set
+- [ ] App access configured (test account if needed)
+- [ ] Data safety form complete
+- [ ] Ads declaration submitted
+- [ ] Internal testing release uploaded and validated
+- [ ] Production release uploaded
+- [ ] All Play Console warnings resolved
+- [ ] Sent for review
