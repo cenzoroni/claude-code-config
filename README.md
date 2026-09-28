@@ -76,8 +76,10 @@ Play Console forms.
 
 - `play-ready/` holds the templates, scripts and ProGuard base rules. Install
   the script dependencies once: `cd play-ready/scripts && pipenv install`.
-- Each app keeps its settings in `play-store.yaml` at the root of its own repo
-  (`analyze.py` drafts it).
+- Everything for one app lives in `play-store/` in that app's repo:
+  `config.yaml` (drafted by `analyze.py`), `guides/`, `pages/` and `assets/`.
+  `/play-ready` first runs `migrate.py`, which moves files from older layouts
+  into that folder, so re-running on an older app brings it up to date.
 - Personal details (developer names and emails, where policy pages are
   hosted, keystore identity) live in `~/.claude/play-ready.yaml`, which
   `restore.sh` creates from

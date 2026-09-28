@@ -5,7 +5,9 @@
 ## Where things live
 - **Command:** `commands/play-ready.md`
 - **Templates, scripts, ProGuard base:** `play-ready/` in this repo
-- **Each app's config:** `play-store.yaml` at the root of that app's own repo
+- **Everything for one app:** `play-store/` in that app's own repo —
+  `config.yaml`, `guides/`, `pages/` (privacy, data deletion), `assets/`.
+  The only copies outside it are the pages published to the policy-hosting site.
 - **Personal details:** `~/.claude/play-ready.yaml` (developer profiles, policy
   hosting, keystore identity). A dummy sample is in
   `config/play-ready.sample.yaml`.
@@ -21,10 +23,13 @@
 - [x] `play-console-walkthrough.md.j2` — step-by-step Play Console guide
 
 ### Scripts (`play-ready/scripts/`)
-- [x] `analyze.py` — Flutter project analyzer; drafts `play-store.yaml` and a readiness checklist
+- [x] `analyze.py` — Flutter project analyzer; drafts `play-store/config.yaml` and a readiness checklist
 - [x] `render.py` — renders templates (`--template`, `--all`, `--hosted`)
 - [x] `generate_assets.py` — icon, feature graphic, screenshots
 - [x] `user_config.py` — loads the personal config: developer profiles, policy hosting
+- [x] `migrate.py` — moves an app's files from any older layout into
+      `play-store/` (dry run by default, `--apply`, safe to repeat); `/play-ready`
+      runs it first every time
 - [x] `Pipfile` — deps: pyyaml, jinja2, tabulate, pillow
 
 ### Other
@@ -33,6 +38,11 @@
 - [x] Policy hosting: `render.py --hosted` publishes privacy and data-deletion
       pages into a site repo under `<base_url>/<app>/privacy` and `/delete-data`
 - [x] Apps without Firebase render (previously crashed)
+
+## Pending
+- [ ] baby-names and gofish are still in the old layout; the next `/play-ready`
+      run on each migrates them. gofish's own `public/delete-data.html` and
+      `PRIVACY_POLICY.md` stay until Play Console uses the new hosted URLs.
 
 ## Known issues
 - [ ] `Pipfile` pins only `python_version = "3"`, so pipenv warns on 3.14.

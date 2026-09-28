@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from user_config import developer_profile, load_user_config
+from user_config import ASSETS, CONFIG, PAGES, app_folder, developer_profile, load_user_config
 from tabulate import tabulate
 
 # ---------------------------------------------------------------------------
@@ -316,14 +316,22 @@ def check_existing_artifacts(project: Path) -> dict:
         "proguard": (project / "android" / "app" / "proguard-rules.pro").exists(),
     }
 
-    for name in ("privacy-policy.html", "privacy_policy.html", "PRIVACY_POLICY.md"):
-        path = project / name
+    pages = app_folder(project) / PAGES
+    for path in [pages / "privacy.html"] + [
+        project / n for n in ("privacy-policy.html", "privacy_policy.html", "PRIVACY_POLICY.md")
+    ]:
         if path.exists():
             checks["privacy_policy"] = True
             checks["privacy_policy_path"] = str(path.relative_to(project))
             break
 
+    if (pages / "delete-data.html").exists():
+        checks["data_deletion_page"] = True
+        checks["data_deletion_path"] = str((pages / "delete-data.html").relative_to(project))
+
     for subdir in ("public", "web", "."):
+        if checks["data_deletion_page"]:
+            break
         for name in ("delete-data.html", "delete-account.html", "data-deletion.html"):
             path = project / subdir / name
             if path.exists():
@@ -562,13 +570,14 @@ def build_checklist(config: dict, project: Path) -> list[tuple[str, str]]:
     else:
         items.append(("[ ]", "App icon not found"))
 
-    fg_path = project / "store_assets" / "feature_graphic.png"
+    assets_dir = app_folder(project) / ASSETS
+    fg_path = assets_dir / "feature_graphic.png"
     if fg_path.exists():
         items.append(("[x]", f"Feature graphic exists ({fg_path.relative_to(project)})"))
     else:
         items.append(("[ ]", "Feature graphic missing (1024x500) — run generate_assets.py feature"))
 
-    ss_dir = project / "store_assets" / "screenshots"
+    ss_dir = assets_dir / "screenshots"
     if ss_dir.exists():
         pngs = list(ss_dir.glob("*.png"))
         if len(pngs) >= 2:
@@ -619,7 +628,7 @@ def main():
     parser.add_argument("project", help="Path to the Flutter project root")
     parser.add_argument(
         "--output", "-o",
-        help="Output path for the config YAML (default: <project>/play-store.yaml)",
+        help="Output path for the config YAML (default: <project>/play-store/config.yaml)",
     )
     args = parser.parse_args()
 
@@ -637,9 +646,9 @@ def main():
     if args.output:
         output_path = Path(args.output).expanduser().resolve()
     else:
-        existing = project / "play-store.yaml"
+        existing = app_folder(project) / CONFIG
         if existing.exists():
-            output_path = project / "play-store.draft.yaml"
+            output_path = app_folder(project) / "config.draft.yaml"
             print(f"NOTE: Existing config found at {existing} — writing draft to {output_path}")
         else:
             output_path = existing

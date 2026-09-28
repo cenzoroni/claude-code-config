@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from user_config import app_slug, apply_user_config
+from user_config import ASSETS, app_folder, app_slug, apply_user_config, project_root
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -304,7 +304,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate Play Store visual assets")
     parser.add_argument("--config", required=True, help="Path to app YAML config")
     parser.add_argument("--project", help="Path to Flutter project root (overrides config repo)")
-    parser.add_argument("--output", help="Output directory (default: project-root/store_assets/)")
+    parser.add_argument("--output", help="Output directory (default: <project>/play-store/assets/)")
     parser.add_argument(
         "command",
         choices=["icon", "feature", "screenshots", "all"],
@@ -319,8 +319,8 @@ def main():
     app = config.get("app", {})
     store_assets = config.get("store_assets", {})
 
-    project = Path(args.project or app.get("repo", ".")).expanduser().resolve()
-    output_dir = Path(args.output).expanduser().resolve() if args.output else project / "store_assets"
+    project = Path(args.project).expanduser().resolve() if args.project else project_root(args.config)
+    output_dir = Path(args.output).expanduser().resolve() if args.output else app_folder(project) / ASSETS
     output_dir.mkdir(parents=True, exist_ok=True)
 
     icon_source = store_assets.get("icon_source")

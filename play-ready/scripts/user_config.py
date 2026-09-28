@@ -3,7 +3,7 @@
 The user config lives at ~/.claude/play-ready.yaml (override with the
 PLAY_READY_CONFIG environment variable). A sample with dummy values ships with
 the plugin at config/play-ready.sample.yaml. Each app's own settings live in
-play-store.yaml at the root of the app's repo.
+play-store/config.yaml in the app's repo.
 
 An app config picks a developer profile with `app.developer_profile`; without
 one it uses `default`. Any `app.developer_*` field set in the app config wins
@@ -85,7 +85,31 @@ def apply_user_config(app_config: dict, slug: str | None = None) -> dict:
     return app_config
 
 
+# Everything /play-ready makes for an app lives in one folder of the app's repo:
+#   play-store/config.yaml   the app's settings
+#   play-store/guides/       filled-in Play Console answers and guides
+#   play-store/pages/        privacy.html and delete-data.html (also published
+#                            to the policy_hosting site when configured)
+#   play-store/assets/       icon, feature graphic, screenshots
+APP_FOLDER = "play-store"
+GUIDES = "guides"
+PAGES = "pages"
+ASSETS = "assets"
+CONFIG = "config.yaml"
+
+
+def app_folder(project: str | Path) -> Path:
+    return Path(project).expanduser().resolve() / APP_FOLDER
+
+
+def project_root(config_path: str | Path) -> Path:
+    """The app repo a config belongs to: the parent of play-store/ for the
+    current layout, or the config's own directory for an older one."""
+    path = Path(config_path).expanduser().resolve()
+    return path.parent.parent if path.parent.name == APP_FOLDER else path.parent
+
+
 def app_slug(app_config: dict, config_path: str | Path) -> str:
     """The app's short name in hosted-page URLs: `app.slug` if set, otherwise
-    the name of the repo directory holding play-store.yaml."""
-    return app_config.get("app", {}).get("slug") or Path(config_path).expanduser().resolve().parent.name
+    the name of the app's repo directory."""
+    return app_config.get("app", {}).get("slug") or project_root(config_path).name

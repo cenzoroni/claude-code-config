@@ -9,7 +9,16 @@ from pathlib import Path
 
 import yaml
 
-from user_config import app_slug, apply_user_config, load_user_config, policy_hosting
+from user_config import (
+    GUIDES,
+    PAGES,
+    app_folder,
+    app_slug,
+    apply_user_config,
+    load_user_config,
+    policy_hosting,
+    project_root,
+)
 from jinja2 import Environment, FileSystemLoader
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -47,10 +56,14 @@ def output_name(template_name: str) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Render Play Store templates from app config")
-    parser.add_argument("--config", required=True, help="Path to the app's play-store.yaml")
+    parser.add_argument("--config", required=True, help="Path to the app's play-store/config.yaml")
     parser.add_argument("--template", help="Single template name to render (e.g. privacy-policy.html.j2)")
     parser.add_argument("--all", action="store_true", help="Render all templates")
-    parser.add_argument("--output", help="Output file path (single template) or output directory (--all)")
+    parser.add_argument(
+        "--output",
+        help="Output file (single template) or directory (--all). "
+             "Default for --all: the app's play-store/ folder (guides/ and pages/)",
+    )
     parser.add_argument(
         "--hosted", action="store_true",
         help="Render the privacy and data-deletion pages into the policy_hosting site from the user config",
@@ -77,17 +90,8 @@ def main():
         keep_trailing_newline=True,
     )
 
-    if args.hosted:
-        hosting = policy_hosting(load_user_config(), app_slug(config, args.config))
-        if not hosting:
-            sys.exit("No policy_hosting in the user config (~/.claude/play-ready.yaml)")
-        hosting["dir"].mkdir(parents=True, exist_ok=True)
-        for tmpl_name, page in HOSTED_PAGES.items():
-            out_path = hosting["dir"] / page
-            out_path.write_text(render_template(env, tmpl_name, config))
-            print(f"Rendered: {out_path}")
-        print(f"Privacy policy URL: {config['hosting']['privacy_url']}")
-        print(f"Data deletion URL:  {config['hosting']['delete_data_url']}")
+    if args.hosted and not args.all:
+        publish_pages(env, config, args.config)
         return
 
     templates = ALL_TEMPLATES if args.all else [args.template]
@@ -99,8 +103,15 @@ def main():
 
         rendered = render_template(env, tmpl_name, config)
 
-        if args.all:
-            out_dir = Path(args.output) if args.output else Path.cwd()
+        if args.all and not args.output:
+            folder = app_folder(project_root(args.config))
+            if tmpl_name in HOSTED_PAGES:
+                out_path = folder / PAGES / HOSTED_PAGES[tmpl_name]
+            else:
+                out_path = folder / GUIDES / output_name(tmpl_name)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+        elif args.all:
+            out_dir = Path(args.output)
             out_dir.mkdir(parents=True, exist_ok=True)
             out_path = out_dir / output_name(tmpl_name)
         elif args.output:
@@ -112,6 +123,24 @@ def main():
 
         out_path.write_text(rendered)
         print(f"Rendered: {out_path}")
+
+    # A full render into the app folder also publishes the pages when a site is configured
+    if args.all and not args.output and (args.hosted or policy_hosting(load_user_config(), app_slug(config, args.config))):
+        publish_pages(env, config, args.config)
+
+
+def publish_pages(env: Environment, config: dict, config_path: str) -> None:
+    """Render the privacy and data-deletion pages into the policy_hosting site."""
+    hosting = policy_hosting(load_user_config(), app_slug(config, config_path))
+    if not hosting:
+        sys.exit("No policy_hosting in the user config (~/.claude/play-ready.yaml)")
+    hosting["dir"].mkdir(parents=True, exist_ok=True)
+    for tmpl_name, page in HOSTED_PAGES.items():
+        out_path = hosting["dir"] / page
+        out_path.write_text(render_template(env, tmpl_name, config))
+        print(f"Published: {out_path}")
+    print(f"Privacy policy URL: {config['hosting']['privacy_url']}")
+    print(f"Data deletion URL:  {config['hosting']['delete_data_url']}")
 
 
 if __name__ == "__main__":

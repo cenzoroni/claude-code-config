@@ -13,9 +13,17 @@ Subcommands (passed as $ARGUMENTS):
   plugin: `${CLAUDE_PLUGIN_ROOT}/play-ready` when installed as a plugin,
   otherwise `~/repos/claude-code-config/play-ready`. It holds `templates/`,
   `scripts/` and `proguard/`.
-- **App config:** `<project-root>/play-store.yaml`, committed in the app's own
-  repo. It holds the app's details (name, ID, data collected, content rating,
-  signing alias, store assets).
+- **App folder:** everything `/play-ready` makes for an app lives in
+  `<project-root>/play-store/`, committed in the app's own repo:
+  - `config.yaml` — the app's details (name, ID, data collected, content
+    rating, signing alias, store assets)
+  - `guides/` — filled-in Play Console answers and guides
+  - `pages/` — `privacy.html` and `delete-data.html`. When `policy_hosting` is
+    set, they're also published to that site.
+  - `assets/` — icon, feature graphic, screenshots
+
+  Nothing for the app goes anywhere else, except the published copies of the
+  pages.
 - **User config** at `~/.claude/play-ready.yaml` (or the path in
   `PLAY_READY_CONFIG`). It holds the personal details: `developer_profiles`,
   `policy_hosting` and `keystore`. Read it first. If it's missing, copy
@@ -28,10 +36,34 @@ Subcommands (passed as $ARGUMENTS):
 
 ---
 
+## Phase 0 — Migrate (every run)
+
+Earlier versions scattered an app's files: `play-store.yaml` at the repo root,
+`store_assets/`, `docs/plans/play-store/`, `~/plans/<app>/play-store/`, a
+config in `~/templates/play-store/config/`, and developer details copied into
+each config. Bring everything into the app folder before anything else:
+
+```bash
+cd <play_ready_dir>/scripts && pipenv run python migrate.py <project-root>
+```
+
+It's a dry run and safe to repeat. If it lists moves, show them to the user,
+then run it again with `--apply`. Tracked files move with `git mv`. For each
+`!` note about an old page the app's own hosting may still serve (e.g.
+`public/delete-data.html`), tell the user to keep it until Play Console points
+at the new URLs, and don't delete it yourself. If it says "already in the
+current layout", continue.
+
+Every later phase is also safe to re-run: steps check before acting, and
+generated guides and pages are overwritten with fresh renders.
+
+---
+
 ## Phase 1 — Analyze
 
 1. Detect the Flutter project. Read `pubspec.yaml` to get the app name.
-2. Check if `<project-root>/play-store.yaml` exists.
+2. Check if `<project-root>/play-store/config.yaml` exists (Phase 0 has
+   already moved an old one there).
    - If yes: load it and use it as the source of truth.
    - If no: run the analyzer to generate a draft:
      ```
@@ -49,13 +81,13 @@ Subcommands (passed as $ARGUMENTS):
 | key.properties exists | check `android/key.properties` |
 | INTERNET permission | grep in `AndroidManifest.xml` |
 | .gitignore covers signing | grep `key.properties` and `*.jks` in `.gitignore` |
-| Privacy policy exists | check for `privacy-policy.html`, `PRIVACY_POLICY.md`, or similar |
-| Data deletion page exists | check for `delete-data.html`, `delete-account.html` in `public/` |
+| Privacy policy exists | check `play-store/pages/privacy.html` |
+| Data deletion page exists | check `play-store/pages/delete-data.html` |
 | ProGuard rules exist | check `android/app/proguard-rules.pro` |
 | R8/minification enabled | grep `isMinifyEnabled = true` in build.gradle |
 | Firestore rules file exists | check `firestore.rules` |
 | App icon source exists | check the `icon_source` path from config |
-| Feature graphic exists | check for 1024x500 feature graphic |
+| Feature graphic exists | check `play-store/assets/feature_graphic.png` (1024x500) |
 
 Print as a checklist with `[x]` for present and `[ ]` for missing.
 
@@ -121,42 +153,29 @@ key.properties
 ```
 
 ### 2.7 Privacy Policy and Data Deletion Page
-**If the user config has `policy_hosting`** (the normal case), render both
-pages into the hosting site:
-```bash
-cd <play_ready_dir>/scripts && pipenv run python render.py \
-  --config <project-root>/play-store.yaml --hosted
-```
-This writes `<repo>/<dir>/<app-name>/privacy.html` and `delete-data.html` and
-prints the two public URLs (`<base_url>/<app-name>/privacy` and
-`/delete-data`). Tell the user the pages go live only after they commit and
-deploy that site repo. Ask before committing or deploying it.
+These are rendered with everything else in Phase 3, into
+`<project-root>/play-store/pages/`. If the user config has `policy_hosting`,
+the same render also publishes them to that site and prints their public URLs
+(`<base_url>/<app>/privacy` and `/delete-data`). The site's copies go live
+only after that site repo is committed and deployed. Ask the user before
+committing or deploying it.
 
-**Without `policy_hosting`**, render into the app repo instead:
-```bash
-cd <play_ready_dir>/scripts && pipenv run python render.py \
-  --config <project-root>/play-store.yaml \
-  --template privacy-policy.html.j2 \
-  --output <project-root>/privacy-policy.html
-cd <play_ready_dir>/scripts && pipenv run python render.py \
-  --config <project-root>/play-store.yaml \
-  --template data-deletion.html.j2 \
-  --output <project-root>/public/delete-data.html
-```
+Without `policy_hosting`, tell the user they need to host
+`play-store/pages/privacy.html` somewhere public and enter its URL in Play
+Console.
 
 ### 2.9 Generate Store Assets (Icon, Feature Graphic, Screenshots)
 
-Run the asset generator for icon and feature graphic:
+Run the asset generator for icon and feature graphic. Output goes to
+`<project-root>/play-store/assets/` by default:
 ```bash
 cd <play_ready_dir>/scripts && pipenv run python generate_assets.py \
-  --config <project-root>/play-store.yaml \
-  --output <project-root>/store_assets \
+  --config <project-root>/play-store/config.yaml \
   icon
 ```
 ```bash
 cd <play_ready_dir>/scripts && pipenv run python generate_assets.py \
-  --config <project-root>/play-store.yaml \
-  --output <project-root>/store_assets \
+  --config <project-root>/play-store/config.yaml \
   feature
 ```
 
@@ -176,7 +195,7 @@ Then capture screenshots by navigating to key screens and using `adb`:
 adb shell screencap -p /sdcard/screenshot.png && adb pull /sdcard/screenshot.png <output-path>
 ```
 
-Capture 2–8 screenshots covering the app's main features: home screen, key feature screens (from the `screens` list in config), and any unique selling points. Save to `<project-root>/store_assets/screenshots/`.
+Capture 2–8 screenshots covering the app's main features: home screen, key feature screens (from the `screens` list in config), and any unique selling points. Save to `<project-root>/play-store/assets/screenshots/`.
 
 The `generate_assets.py` script also supports `screenshots` command for automated capture from a running emulator.
 
@@ -194,22 +213,20 @@ jarsigner -verify build/app/outputs/bundle/release/app-release.aab
 
 ## Phase 3 — Generate Artifacts
 
-Render all compliance/guide templates and write to `<app repo>/docs/plans/play-store/`:
+Render everything into the app folder:
 
 ```bash
 cd <play_ready_dir>/scripts && pipenv run python render.py \
-  --config <project-root>/play-store.yaml \
-  --all \
-  --output <app repo>/docs/plans/play-store/
+  --config <project-root>/play-store/config.yaml --all
 ```
 
-This produces:
-- `data-safety-answers.md` — exact answers for the Play Console Data Safety form
-- `content-rating-answers.md` — exact answers for the IARC content rating questionnaire
-- `store-listing-guide.md` — description, screenshot specs, asset requirements
-- `play-console-walkthrough.md` — step-by-step Play Console submission guide
-- `privacy-policy.html` — rendered privacy policy (also in repo)
-- `data-deletion.html` — rendered data deletion page (also in repo)
+This writes:
+- `play-store/guides/data-safety-answers.md` — exact answers for the Play Console Data Safety form
+- `play-store/guides/content-rating-answers.md` — exact answers for the IARC content rating questionnaire
+- `play-store/guides/store-listing-guide.md` — description, screenshot specs, asset requirements, policy URLs
+- `play-store/guides/play-console-walkthrough.md` — step-by-step Play Console submission guide
+- `play-store/pages/privacy.html` and `delete-data.html`, also published to
+  the `policy_hosting` site when configured
 
 Print a summary listing all generated files with their paths.
 
@@ -218,9 +235,10 @@ Print a summary listing all generated files with their paths.
 ## `templates` Subcommand
 
 If subcommand is `templates`:
-1. Find every app config: `ls ~/repos/*/play-store.yaml`
-2. For each one, render all templates to `<that repo>/docs/plans/play-store/`
-   (and the hosted pages with `--hosted` if `policy_hosting` is set)
+1. Find every app: `ls ~/repos/*/play-store/config.yaml ~/repos/*/play-store.yaml`
+   (the second pattern finds apps still in the old layout)
+2. For each app, run Phase 0 (migrate), then Phase 3 (render into its
+   `play-store/` folder, publishing pages when `policy_hosting` is set)
 3. Print summary of all rendered files
 
 ---
