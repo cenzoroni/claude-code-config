@@ -1,10 +1,23 @@
 Prepare a Flutter app for Google Play Store submission. Analyzes the project, automates build config, and generates compliance artifacts.
 
-Subcommands (passed as $ARGUMENTS):
-- (empty) — full pipeline: analyze + automate + generate
-- `analyze` — analyze project and print readiness checklist
-- `generate` — render artifacts from existing config
-- `templates` — re-render all templates for all configured apps
+## Choosing what to run
+
+The action comes from `$ARGUMENTS`.
+
+**If `$ARGUMENTS` is empty, do not run anything yet.** Present this menu and ask
+the user which action to run — use the `AskUserQuestion` tool if available,
+otherwise list the options and wait for their reply:
+
+| Option | What it does |
+|--------|--------------|
+| `full` | Full pipeline: migrate + analyze + automate + generate (Phases 0–3) |
+| `analyze` | Analyze the project and print the readiness checklist (Phases 0–1) |
+| `generate` | Render artifacts from existing config (Phase 0 migrate, then Phase 3) |
+| `templates` | Re-render all templates for every configured app |
+
+When `$ARGUMENTS` already names an action (e.g. `/play-ready analyze`), skip the
+menu and run that action directly. Treat `full` (or empty, once chosen from the
+menu) as the full pipeline.
 
 ## Prerequisites
 
@@ -96,6 +109,9 @@ If the subcommand is `analyze`, stop here.
 ---
 
 ## Phase 2 — Automate
+
+If the chosen action is `generate`, skip this phase and go straight to Phase 3
+(Phase 0 migrate still runs first).
 
 Execute these steps in order. Skip anything already done (checked in Phase 1). Ask the user before destructive or irreversible steps.
 
