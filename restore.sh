@@ -10,8 +10,10 @@
 #   - Creates ~/.claude/play-ready.yaml from the sample if missing
 #   - Copies memory files to the repos-level project memory
 #
-# The plugin parts (agents, commands, skills) are installed separately via:
-#   /install-plugin from <repo-url>
+# The plugin parts (agents, commands, skills) are installed separately from the
+# marketplace this repo defines:
+#   /plugin marketplace add cenzoroni/claude-code-config
+#   /plugin install sdlc-pipeline play-ready dev-skills
 
 set -euo pipefail
 
@@ -83,5 +85,6 @@ done
 echo ""
 echo "Restore complete."
 echo ""
-echo "To install the plugin (agents, commands, skills), run in Claude Code:"
-echo "  /install-plugin from <this-repo-url>"
+echo "To install the plugins (agents, commands, skills), run in Claude Code:"
+echo "  /plugin marketplace add cenzoroni/claude-code-config"
+echo "  /plugin install sdlc-pipeline play-ready dev-skills"

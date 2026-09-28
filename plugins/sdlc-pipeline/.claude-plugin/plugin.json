@@ -1,0 +1,8 @@
+{
+  "name": "sdlc-pipeline",
+  "description": "SDLC workflow agents and slash commands: spec → architect → implement → test → review → ship.",
+  "version": "1.0.0",
+  "author": {
+    "name": "cenzoroni"
+  }
+}

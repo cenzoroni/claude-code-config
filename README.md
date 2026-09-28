@@ -4,7 +4,17 @@ Personal Claude Code setup — agents, commands, skills, hooks, and configuratio
 
 ## What's Included
 
-### Plugin (auto-installed via `/install-plugin`)
+### Plugins (installed from this repo's marketplace)
+
+This repo is a **plugin marketplace** (`.claude-plugin/marketplace.json`) that
+ships three plugins under `plugins/`:
+
+| Plugin          | Contents                                                        |
+|-----------------|-----------------------------------------------------------------|
+| `sdlc-pipeline` | 8 agents + 9 workflow commands (spec → architect → ship)        |
+| `play-ready`    | `/play-ready` command + `play-ready/` templates/scripts/proguard |
+| `dev-skills`    | 5 skills: api-check, debug, modernize-ui, run, seed             |
+
 
 | Type     | Name              | Purpose                                     |
 |----------|-------------------|---------------------------------------------|
@@ -52,21 +62,39 @@ Personal Claude Code setup — agents, commands, skills, hooks, and configuratio
 git clone git@github.com:cenzoroni/claude-code-config.git
 cd claude-code-config
 
-# 2. Restore configs, hooks, and memory
+# 2. Restore configs, hooks, and memory (the dotfile half)
 ./restore.sh
 
-# 3. Install the plugin (run inside Claude Code)
-/install-plugin from git@github.com:cenzoroni/claude-code-config.git
+# 3. Install the plugins (run inside Claude Code)
+/plugin marketplace add cenzoroni/claude-code-config
+/plugin install sdlc-pipeline play-ready dev-skills
 ```
 
 ## Keeping It Updated
 
-When you change agents, commands, skills, or configs locally in `~/.claude/`, update this repo:
+Two tracks, because they sync differently:
+
+**Plugins (agents, commands, skills)** — edit the files under `plugins/`,
+commit, and push. Each machine that has the marketplace added pulls the changes:
 
 ```bash
+# on the authoring machine
 cd ~/repos/claude-code-config
-# Copy changed files back, commit, push
+$EDITOR plugins/sdlc-pipeline/commands/ship.md   # etc.
+git commit -am "…" && git push
+
+# on any other machine (or leave auto-update on to skip this)
+/plugin marketplace update vince-claude-config
 ```
+
+Auto-update is enabled by default in this setup, so a `git push` here reaches
+every machine on its next session. There is no more hand-copying into
+`~/.claude/skills/` — the installed plugin (pulled from git) is the single
+source of truth.
+
+**Dotfiles (CLAUDE.md, settings.json, hooks, memory)** — plugins can't deliver
+these, so they stay on the `restore.sh` track. Copy changed files back into
+`backup/` / `hooks/`, commit, push, and run `./restore.sh` on the other machine.
 
 ## /play-ready
 
@@ -75,7 +103,7 @@ build setup, privacy and data-deletion pages, and filled-in answers for the
 Play Console forms.
 
 - `play-ready/` holds the templates, scripts and ProGuard base rules. Install
-  the script dependencies once: `cd play-ready/scripts && pipenv install`.
+  the script dependencies once: `cd plugins/play-ready/play-ready/scripts && pipenv install`.
 - Everything for one app lives in `play-store/` in that app's repo:
   `config.yaml` (drafted by `analyze.py`), `guides/`, `pages/` and `assets/`.
   `/play-ready` first runs `migrate.py`, which moves files from older layouts

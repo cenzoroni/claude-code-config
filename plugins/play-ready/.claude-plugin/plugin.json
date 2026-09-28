@@ -1,0 +1,8 @@
+{
+  "name": "play-ready",
+  "description": "Prepare a Flutter app for Google Play Store submission: readiness checks, signing/build setup, privacy pages, and Play Console answers.",
+  "version": "1.0.0",
+  "author": {
+    "name": "cenzoroni"
+  }
+}

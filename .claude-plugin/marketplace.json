@@ -1,0 +1,26 @@
+{
+  "name": "vince-claude-config",
+  "owner": {
+    "name": "cenzoroni"
+  },
+  "metadata": {
+    "description": "Personal Claude Code plugins for Flutter/Dart, Go, and Python development."
+  },
+  "plugins": [
+    {
+      "name": "sdlc-pipeline",
+      "source": "./plugins/sdlc-pipeline",
+      "description": "SDLC workflow: spec → architect → implement → test → review → ship agents and slash commands."
+    },
+    {
+      "name": "play-ready",
+      "source": "./plugins/play-ready",
+      "description": "Prepare a Flutter app for Google Play Store submission: readiness checks, signing/build setup, privacy pages, and Play Console answers."
+    },
+    {
+      "name": "dev-skills",
+      "source": "./plugins/dev-skills",
+      "description": "Standalone dev skills: api-check, debug, modernize-ui, run, seed."
+    }
+  ]
+}
