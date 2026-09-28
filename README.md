@@ -20,6 +20,7 @@ Personal Claude Code setup — agents, commands, skills, hooks, and configuratio
 | Command  | /document         | Write documentation for code                 |
 | Command  | /feature          | Full SDLC pipeline (spec → ship)             |
 | Command  | /implement        | Implement a feature or change                |
+| Command  | /play-ready       | Prepare a Flutter app for Google Play        |
 | Command  | /preflight        | Quick quality check (no commit)              |
 | Command  | /review           | Review code changes for issues               |
 | Command  | /ship             | Full quality pipeline through to PR          |
@@ -66,3 +67,11 @@ When you change agents, commands, skills, or configs locally in `~/.claude/`, up
 cd ~/repos/claude-code-config
 # Copy changed files back, commit, push
 ```
+
+## Personal config for /play-ready
+
+`/play-ready` keeps personal details (developer names and emails, keystore
+identity, templates location) out of this repo. They live in
+`~/.claude/play-ready.yaml`, which `restore.sh` creates from
+[`config/play-ready.sample.yaml`](config/play-ready.sample.yaml). Fill it in
+locally. `play-ready.yaml` is gitignored so a real copy can't be committed.

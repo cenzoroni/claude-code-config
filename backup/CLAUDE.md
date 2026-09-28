@@ -22,9 +22,35 @@
 - Never hardcode API keys. Use .env files or environment variables.
 
 ## Plans
-- Store all project plans in `~/plans/<unique-project-name>/plan.md`
-- Supporting artifacts (diagrams, samples) go in the same subfolder
+- **Plans live in the project's own repo** at `docs/plans/`, so a plan and the
+  code it describes change in the same commit (a roadmap saying "M5 next" moves
+  in the commit that finishes M5).
+- Master plan is `roadmap.md` (or `plan.md` for single-plan projects)
+- Sub-plans and supporting artifacts live alongside the master plan
+- Completed sub-plans go in `docs/plans/completed/`
+- Canceled sub-plans go in `docs/plans/canceled/`
 - Plans should be detailed enough to execute without this conversation as context
+- **No repo yet? Create one first** (`git init`, then a private GitHub repo)
+  before writing the plan. Every project gets a repo from day one.
+- **Decisions go in ADRs** at `docs/adr/NNNN-short-title.md` (Context →
+  Decision → Consequences), indexed in `docs/adr/README.md`. Plans link to ADRs
+  instead of repeating the reasoning. Never rewrite an accepted ADR; supersede
+  it with a new one.
+- **Tasks and known problems go in `docs/plans/issues.md`** (Open / Closed
+  checklists), not GitHub Issues for now. Tick items off in the commit that
+  fixes them.
+- Search plans across projects: `rg <pattern> -g 'docs/plans/**' ~/repos`
+- The old `~/plans` repo is retired; don't add to it.
+
+### Naming
+- Flutter repos (`groovy_baby`, `top_runner`, `gofish_kotlin`) keep
+  underscores: the directory matches `name:` in `pubspec.yaml`, and a Dart
+  package name must be a valid identifier. New non-Flutter projects use
+  hyphens; don't rename existing repos just to match.
+- **Before renaming any repo, check what pins its name.** Deploy auth commonly
+  does: `trailplan` had its name in a Workload Identity condition *and* a service
+  account binding, and renaming without widening both first breaks deploys.
+  Widen to accept old and new, rename, verify a deploy, then narrow.
 
 ## Scripts
 - Store standalone utility scripts in `~/scripts/` with unique descriptive names

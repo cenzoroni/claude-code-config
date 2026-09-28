@@ -25,6 +25,7 @@
 - [x] `Pipfile` — deps: pyyaml, jinja2, tabulate
 
 ### Other
+- [x] Personal details moved to a user config (`~/.claude/play-ready.yaml`, sample in `config/play-ready.sample.yaml`); app configs pick a `developer_profile`
 - [x] `proguard/flutter.pro` — shared ProGuard base rules
 - [x] Claude Code skill at `~/.claude/commands/play-ready.md`
 

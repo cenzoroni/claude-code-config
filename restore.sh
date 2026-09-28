@@ -7,6 +7,7 @@
 #   - Merges settings.json into ~/.claude/settings.json (hooks, permissions, statusLine)
 #   - Copies statusline-command.sh to ~/.claude/
 #   - Copies hook scripts to ~/scripts/
+#   - Creates ~/.claude/play-ready.yaml from the sample if missing
 #   - Copies memory files to the repos-level project memory
 #
 # The plugin parts (agents, commands, skills) are installed separately via:
@@ -58,6 +59,14 @@ done
 cp "$REPO_DIR/hooks/llm-cost-tracker.py" "$SCRIPTS_DIR/llm-cost-tracker.py"
 cp "$REPO_DIR/hooks/llm_cost_tracker_config.py" "$SCRIPTS_DIR/llm_cost_tracker_config.py"
 echo "[done] Copied cost tracker scripts to ~/scripts/"
+
+# /play-ready user config: start from the sample, never overwrite a real one
+if [ -f "$CLAUDE_DIR/play-ready.yaml" ]; then
+    echo "[skip] ~/.claude/play-ready.yaml already exists"
+else
+    cp "$REPO_DIR/config/play-ready.sample.yaml" "$CLAUDE_DIR/play-ready.yaml"
+    echo "[todo] Created ~/.claude/play-ready.yaml from the sample: fill in your details"
+fi
 
 # Memory
 mkdir -p "$MEMORY_DIR"

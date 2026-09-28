@@ -36,7 +36,7 @@ Present the architecture. Ask the user: approve, request changes, or skip.
 
 Save the approved spec and architecture as a persistent plan:
 1. Determine project name from the current directory name or git remote
-2. Create `~/plans/<project-name>/plan.md` with both spec and architecture sections
+2. Create `docs/plans/plan.md` in the project repo with both spec and architecture sections
 3. Confirm the plan is saved and report the path
 
 ## Phase 4 — Implementation

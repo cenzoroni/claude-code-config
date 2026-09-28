@@ -36,10 +36,14 @@ elif [ -f "go.mod" ]; then
         ERRORS+="go test failed:\n${OUTPUT}\n\n"
     }
 elif [ -f "Pipfile" ]; then
+    # git reports staged paths relative to the repo root, but we may have cd'd
+    # into a subdirectory (e.g. backend/) to pick up its Pipfile. Resolve each
+    # path from the root so py_compile can actually find the file.
+    REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
     CHANGED_PY=$(git diff --cached --name-only --diff-filter=ACM -- '*.py' 2>/dev/null || true)
     if [ -n "$CHANGED_PY" ]; then
         for f in $CHANGED_PY; do
-            OUTPUT=$(pipenv run python -m py_compile "$f" 2>&1) || {
+            OUTPUT=$(pipenv run python -m py_compile "$REPO_ROOT/$f" 2>&1) || {
                 ERRORS+="Syntax error in $f:\n${OUTPUT}\n\n"
             }
         done

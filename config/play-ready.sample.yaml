@@ -1,0 +1,30 @@
+# /play-ready user config: the personal details the plugin fills into every app.
+#
+# Copy this file to ~/.claude/play-ready.yaml (or point PLAY_READY_CONFIG at
+# your copy) and replace the dummy values. Never commit your real copy;
+# play-ready.yaml is in .gitignore.
+
+# Where the templates, scripts and per-app configs live.
+templates_dir: ~/templates/play-store
+
+# Developer identities shown in privacy policies, data-deletion pages and the
+# store listing. An app picks one with `developer_profile:` in its app config;
+# apps without it use `default`. Any developer_* field set in an app config
+# overrides the profile.
+developer_profiles:
+  default:
+    name: "Jane Developer"
+    email: "jane@example.com"
+    website: "https://example.com"   # optional
+    phone: ""                         # optional
+  studio:
+    name: "Jane Developer"
+    email: "studio@example.com"
+
+# Distinguished name for generated upload keystores (keytool -dname).
+keystore:
+  organizational_unit: "Dev"
+  organization: "Jane Developer"
+  locality: "Unknown"
+  state: "Unknown"
+  country: "US"
